@@ -121,32 +121,7 @@ ON
     }
   })
 
-  router.post('/login', (req, res) => {
-    const { username, password } = req.body
-
-    if (!username || !password) {
-      return res
-        .status(400)
-        .json({ error: 'Username and password are required' })
-    }
-
-    connection.query(
-      'SELECT id FROM user WHERE username = ? AND password = ?',
-      [username, password],
-      (err, results) => {
-        if (err) {
-          console.error('Error executing query: ' + err.stack)
-          return res.status(500).json({ error: 'Internal server error' })
-        }
-
-        if (results.length === 0) {
-          return res.status(401).json({ error: 'Invalid credentials' })
-        }
-
-        res.status(200).json(results)
-      }
-    )
-  })
+  
 
   return router
 }
