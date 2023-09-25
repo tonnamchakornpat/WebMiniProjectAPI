@@ -1,21 +1,26 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcrypt')
 
 module.exports = (connection) => {
   //? Create User
   router.post('/user', async (req, res) => {
     const { username, password } = req.body
 
+    const passwordHash = await bcrypt.hash(password, 10)
+
     try {
       connection.query(
         'INSERT INTO user (id, username, password) VALUES (?, ?, ?)',
-        ['', username, password],
+        ['', username, passwordHash],
         (err) => {
           if (err) {
             console.log('Error Inserting a user, ', err)
-            return res.status(400).send()
+            return res.status(400).send(err)
           }
-          res.status(201).json({ message: 'New user Successfully created' })
+          res
+            .status(201)
+            .json({ message: `New user: ${username} Successfully created` })
         }
       )
     } catch (error) {
