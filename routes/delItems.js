@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-module.exports = (connection) => {
-  router.delete('/post/:postId', async (req, res) => {
+module.exports = (connection, authenticateToken) => {
+  router.delete('/post/:postId', authenticateToken, async (req, res) => {
     const postId = req.params.postId
     try {
       connection.query(

@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
 
-module.exports = (connection) => {
+module.exports = (connection, authenticateToken) => {
   //? Get AllPosts
-  router.get('/posts', async (req, res) => {
+  router.get('/posts', authenticateToken, async (req, res) => {
     try {
       connection.query(
         `
@@ -55,13 +55,13 @@ ON
   })
 
   //? GetMyPost
-  router.get('/myposts/:postId', async (req, res) => {
+  router.get('/myPosts', authenticateToken, async (req, res) => {
     try {
-      userId = req.params.postId
+      userId = req.user.id
       connection.query(
         `SELECT id,title, content, created_at FROM post
             WHERE user_id ='${userId}' 
-            ORDER by created_at ASC`,
+            ORDER by created_at DESC`,
         (err, result) => {
           if (err) {
             console.log('Error Fetching data')
@@ -120,8 +120,6 @@ ON
       return res.status(500).send()
     }
   })
-
-  
 
   return router
 }

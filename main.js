@@ -5,6 +5,7 @@ const mysql = require('mysql')
 const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser')
+const jwt = require('jsonwebtoken')
 
 const app = express()
 app.use(express.json())
@@ -26,6 +27,22 @@ let connection = mysql.createConnection({
   port: process.env.DB_PORT,
 })
 
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
+  if (token == null) return res.sendStatus(401) // if there isn't any token
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    req.user = user
+    console.log(user)
+    next()
+  } catch (error) {
+    return res.sendStatus(403)
+  }
+}
+
 connection.connect((err) => {
   if (err) {
     console.error('error connecting DB: ' + err.stack)
@@ -34,11 +51,13 @@ connection.connect((err) => {
   console.log('connected DB')
 })
 
-const getRoutes = require('./routes/getItems')(connection)
-const addItemRoutes = require('./routes/addItems')(connection)
-const delItemRoutes = require('./routes/delItems')(connection)
-const updateItemRoutes = require('./routes/updateItems')(connection)
-const userItemRoutes = require('./routes/userItems')(connection)
+const middleWare = [connection, authenticateToken]
+
+const getRoutes = require('./routes/getItems')(...middleWare)
+const addItemRoutes = require('./routes/addItems')(...middleWare)
+const delItemRoutes = require('./routes/delItems')(...middleWare)
+const updateItemRoutes = require('./routes/updateItems')(...middleWare)
+const userItemRoutes = require('./routes/userItems')(...middleWare)
 
 app.use('/get', getRoutes)
 app.use('/create', addItemRoutes)

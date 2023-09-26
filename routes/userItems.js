@@ -6,7 +6,7 @@ require('dotenv').config()
 
 const secret_key = process.env.JWT_SECRET_KEY
 
-module.exports = (connection) => {
+module.exports = (connection, authenticateToken) => {
   router.post('/login', async (req, res) => {
     try {
       const { username, password } = req.body
@@ -39,9 +39,13 @@ module.exports = (connection) => {
               return false
             }
 
-            const token = jwt.sign({ username, role: 'user' }, secret_key, {
-              expiresIn: '1h',
-            })
+            const token = jwt.sign(
+              { id: userData.id, user: userData.username },
+              secret_key,
+              {
+                expiresIn: '1h',
+              }
+            )
 
             res.status(200).json({ message: 'login successful', token })
           }
@@ -56,25 +60,9 @@ module.exports = (connection) => {
     }
   })
 
-  router.get('/profile', (req, res) => {
+  router.get('/auth', authenticateToken, async (req, res) => {
     try {
-      const authHeader = req.headers['authorization']
-      let authToken = ''
-      if (authHeader) {
-        authToken = authHeader.split(' ')[1]
-      }
-
-      const user = jwt.verify(authToken, secret_key)
-      console.log(user)
-
-      connection.query(
-        `SELECT * FROM user WHERE username = "${user.username}"`,
-        (err, res) => {
-          if (!res || res.length === 0) {
-            throw { message: 'user not found' }
-          }
-        }
-      )
+      console.log('user:', req.user)
       connection.query('SELECT * FROM user', (err, results) => {
         if (err) {
           res.json({ message: err })
@@ -87,13 +75,8 @@ module.exports = (connection) => {
     }
   })
 
-  router.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error destroying session:', err)
-      }
-      res.status(200).send('Logout Success')
-    })
+  router.get('/logout', authenticateToken, (req, res) => {
+    res.status(200).send('Logout Success')
   })
 
   router.post('/test', (req, res) => {
@@ -108,26 +91,6 @@ module.exports = (connection) => {
     // res.sendStatus(200).json({ message: username, password })
 
     res.status(200).json(req.session.userID)
-
-    // connection.query(
-    //   'SELECT id FROM user WHERE username = ? AND password = ?',
-    //   [username, password],
-    //   (err, results) => {
-    //     if (err) {
-    //       console.error('Error executing query: ' + err.stack)
-    //       return res.status(500).json({ error: 'Internal server error' })
-    //     }
-
-    //     if (results.length === 0) {
-    //       return res.status(401).json({ error: 'Invalid credentials' })
-    //     }
-    //     if (results.length === 1) {
-    //       req.session.userID = results
-    //       console.log(req.session.userID)
-    //       res.status(200).json(username, password)
-    //     }
-    //   }
-    // )
   })
 
   return router

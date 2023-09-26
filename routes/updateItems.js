@@ -1,15 +1,15 @@
 const express = require('express')
 const router = express.Router()
 
-module.exports = (connection) => {
+module.exports = (connection, authenticateToken) => {
   //? Update Title and Content of a Post
-  router.put('/post/:postId', async (req, res) => {
+  router.put('/post/:postId', authenticateToken, async (req, res) => {
     try {
       const postId = req.params.postId
       const { title, content } = req.body
 
       connection.query(
-        `UPDATE post SET title = '${title}', content = '${content}' WHERE id = '${postId}'`,
+        `UPDATE post SET title = '${title}', content = '${content}', created_at = NOW() WHERE id = '${postId}'`,
         (err, result) => {
           if (err) {
             console.log('Error updating post:', err)
