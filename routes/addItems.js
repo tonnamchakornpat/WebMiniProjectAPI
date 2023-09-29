@@ -41,7 +41,7 @@ module.exports = (connection, authenticateToken) => {
         (err) => {
           if (err) {
             console.log('Error Inserting a Post, ', err)
-            return res.status(400).send()
+            return res.status(400).send(err)
           }
           res.status(201).json({ message: 'Create New Post Successfully' })
         }

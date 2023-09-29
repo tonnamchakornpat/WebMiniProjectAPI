@@ -41,10 +41,10 @@ module.exports = (connection, authenticateToken) => {
 
             const token = jwt.sign(
               { id: userData.id, user: userData.username },
-              secret_key,
-              {
-                expiresIn: '1h',
-              }
+              secret_key
+              // {
+              //   expiresIn: '1h',
+              // }
             )
 
             res.status(200).json({ message: 'login successful', token })
